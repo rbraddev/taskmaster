@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+	"encoding/csv"
 	"fmt"
 	"os"
 	"strings"
@@ -97,4 +98,20 @@ func createTaskTemplate(site string, new bool) error {
 		}
 	}
 	return nil
+}
+
+func loadCsv(site string, file string) ([][]string, error) {
+	f, err := os.Open(fmt.Sprintf("./%s/%s.csv", site, file))
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	csvReader := csv.NewReader(f)
+	tasks, err := csvReader.ReadAll()
+	if err != nil {
+		return nil, err
+	}
+
+	return tasks, nil
 }

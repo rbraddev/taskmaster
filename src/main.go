@@ -52,6 +52,15 @@ func run(tasks string, proxies string, monitor bool, site string, newTasks bool)
 		if err = createTaskTemplate(site, newTasks); err != nil {
 			return err
 		}
+	} else {
+		mod, err := initModule(site)
+		if err != nil {
+			return err
+		}
+
+		if err = mod.run(); err != nil {
+			return err
+		}
 	}
 
 	return nil

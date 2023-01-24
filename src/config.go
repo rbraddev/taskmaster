@@ -5,7 +5,7 @@ type siteConfiguration struct {
 }
 
 var funkoConfig = siteConfiguration{
-	tasksHeaders: []byte("first_name,last_name,address_1,address_2"),
+	tasksHeaders: []byte("item,qty,first_name,last_name,address_1,address_2,city,postcode,username,password,guest"),
 }
 
 var Configuration = map[string]siteConfiguration{
