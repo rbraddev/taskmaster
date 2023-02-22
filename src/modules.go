@@ -11,7 +11,7 @@ import (
 
 type Task struct {
 	item       string
-	qty        int
+	qty        string
 	firstname  string
 	lastname   string
 	address1   string
@@ -20,7 +20,7 @@ type Task struct {
 	postcode   string
 	username   string
 	password   string
-	guest      bool
+	proxy      Proxy
 	status     string
 	carted     int
 	checkedout bool
@@ -36,6 +36,7 @@ type Proxy struct {
 
 type BaseModule struct {
 	Site    string
+	cfg     siteConfiguration
 	Proxies []Proxy
 	Monitor bool
 	Live    bool
@@ -49,8 +50,8 @@ type SiteModule interface {
 	run() error
 }
 
-func (b *BaseModule) loadProxies() error {
-	f, err := os.Open(fmt.Sprintf("./%s/%s.txt", b.Site, "proxies"))
+func (m *BaseModule) loadProxies() error {
+	f, err := os.Open(fmt.Sprintf("./%s/%s.txt", m.Site, "proxies"))
 	if err != nil {
 		return err
 	}
@@ -67,13 +68,13 @@ func (b *BaseModule) loadProxies() error {
 				host:     res[0],
 				port:     res[1],
 			}
-			b.Proxies = append(b.Proxies, p)
+			m.Proxies = append(m.Proxies, p)
 		}
 	}
 	return nil
 }
 
-func (b *BaseModule) initBrowser() error {
+func (m *BaseModule) initBrowser() error {
 	launchOptions := playwright.BrowserTypeLaunchOptions{
 		Headless: playwright.Bool(false),
 		Proxy: &playwright.BrowserTypeLaunchOptionsProxy{
@@ -86,7 +87,7 @@ func (b *BaseModule) initBrowser() error {
 		return err
 	}
 
-	b.Browser, err = pw.Chromium.Launch(launchOptions)
+	m.Browser, err = pw.Chromium.Launch(launchOptions)
 	if err != nil {
 		return err
 	}
@@ -99,6 +100,15 @@ func initModule(s string) (SiteModule, error) {
 	case "funko":
 		t := &Funko{}
 		t.Site = "funko"
+		t.cfg = funkoConfig
+		if err := t.load(); err != nil {
+			return nil, err
+		}
+		return t, nil
+	case "topps":
+		t := &Topps{}
+		t.Site = "topps"
+		t.cfg = toppsConfig
 		if err := t.load(); err != nil {
 			return nil, err
 		}

@@ -16,6 +16,7 @@ type Funko struct {
 
 type FunkoTask struct {
 	Task
+	guest bool
 }
 
 func (m *Funko) load() error {
@@ -84,11 +85,12 @@ func (m *Funko) run() error {
 	// }
 	var wg sync.WaitGroup
 	for i, t := range m.Tasks {
+		t.proxy = m.Proxies[i]
 		wg.Add(1)
-		go func(t FunkoTask, i int) {
+		go func(t FunkoTask) {
 			defer wg.Done()
-			_ = m.runTask(t, i)
-		}(t, i)
+			_ = m.runTask(t)
+		}(t)
 	}
 	wg.Wait()
 	return nil
@@ -151,12 +153,12 @@ func (t *FunkoTask) checkout(p playwright.Page) error {
 	return nil
 }
 
-func (m *Funko) runTask(t FunkoTask, i int) error {
+func (m *Funko) runTask(t FunkoTask) error {
 	page, err := m.Browser.NewPage(playwright.BrowserNewContextOptions{
 		Proxy: &playwright.BrowserNewContextOptionsProxy{
-			Server:   playwright.String(fmt.Sprintf("http://%s:%s", m.Proxies[i].host, m.Proxies[i].port)),
-			Username: playwright.String(fmt.Sprint(m.Proxies[i].username)),
-			Password: playwright.String(fmt.Sprint(m.Proxies[i].password)),
+			Server:   playwright.String(fmt.Sprintf("http://%s:%s", t.proxy.host, t.proxy.port)),
+			Username: playwright.String(fmt.Sprint(t.proxy.username)),
+			Password: playwright.String(fmt.Sprint(t.proxy.password)),
 		},
 	})
 	if err != nil {
